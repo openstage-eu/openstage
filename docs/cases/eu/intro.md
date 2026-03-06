@@ -1,0 +1,1 @@
+EU case models extend the [base types](base-models.md) with typed fields for EU legislative data. Each EU model inherits all base fields (title, identifiers, date, etc.) and adds domain-specific properties drawn from the EU's Common Data Model (CDM).

@@ -1,0 +1,3 @@
+EU model fields are populated from RDF data extracted from the EU Publications Office's Cellar repository. The extraction pipeline uses [openbasement](https://openstage-eu.github.io/openbasement/) templates that map CDM ontology properties to flat Python dicts. The `from_openbasement()` classmethods on each EU model then map these dicts into typed model instances.
+
+Each EU-specific field declares its openbasement source in the `x_source` metadata annotation (e.g., `source="openbasement:eu_procedure.procedure_type"`). This traces the field back to the openbasement template field it was extracted from. A single openbasement template field may source from multiple CDM/RDF predicates.

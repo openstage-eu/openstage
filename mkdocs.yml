@@ -1,0 +1,57 @@
+site_name: openstage
+site_url: https://openstage-eu.github.io/openstage/
+site_description: Python package for the openstage project's legislative data models and adapters
+repo_url: https://github.com/openstage-eu/openstage
+repo_name: GitHub repository
+
+theme:
+  name: openstage
+  announcement: "openstage is under active development as part of the openstage project and has not reached a stable release. APIs and data models may change unexpectedly."
+  announcement_level: info
+  subsite:
+    text: openstage project
+    url: https://github.com/openstage-eu
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Models:
+    - Guide: models-guide.md
+    - Base: base-models.md
+    - Cases:
+      - EU: eu-models.md
+  - Fields and Codebooks: fields-codebook.md
+
+exclude_docs: |
+  cases/
+  scripts/
+
+hooks:
+  - docs/hooks/field_labels.py
+
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:mermaid2.fence_mermaid
+
+plugins:
+  - mermaid2
+  - gen-files:
+      scripts:
+        - docs/scripts/gen_case_pages.py
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            extensions:
+              - griffe_pydantic
+            show_source: false
+            show_root_heading: false
+            heading_level: 4
+            docstring_style: google
+            members_order: source
+            show_docstring_attributes: true
+            show_if_no_docstring: false
+            merge_init_into_class: true
