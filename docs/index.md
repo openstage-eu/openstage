@@ -25,6 +25,8 @@ Both paths produce the same model objects.
 | `models/` | Typed Pydantic models with multilingual text and multi-scheme identifiers | pydantic |
 | `models/eu/` | EU case models extending base types with domain-specific fields | pydantic |
 | `adapters/` | Map external data (openbasement dicts) into models | pydantic |
+| `collections` | `ProcedureList` for filtering and cross-procedure analytics | -- |
+| `dataset` | `Dataset` for loading and saving packaged procedure collections | -- |
 
 ## Part of the openstage project
 
@@ -37,4 +39,5 @@ Both paths produce the same model objects.
 - [Getting started](getting-started.md): Install, load data, explore models.
 - [Base models](base-models.md): Entity hierarchy, multilingual text, identifiers.
 - [EU models](eu-models.md): EU-specific fields, controlled vocabularies, codebook.
+- [Datasets](dataset.md): Loading, saving, filtering, and analyzing procedure collections.
 - [Fields and codebooks](fields-codebook.md): Field metadata system and codebook generation.

@@ -20,6 +20,7 @@ nav:
     - Base: base-models.md
     - Cases:
       - EU: eu-models.md
+  - Datasets: dataset.md
   - Fields and Codebooks: fields-codebook.md
 
 exclude_docs: |

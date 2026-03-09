@@ -142,13 +142,29 @@ class EUProcedure(Procedure):
         return None
 
     @property
+    def withdrawal_event(self) -> Event | None:
+        """The event where the procedure was withdrawn by the Commission.
+
+        Returns None if the procedure has not been withdrawn.
+        """
+        for event in self.events:
+            if event.type in _WITHDRAWAL_EVENT_TYPES:
+                return event
+        return None
+
+    @property
+    def withdrawal_date(self) -> str | None:
+        """Date when the procedure was withdrawn, or None."""
+        event = self.withdrawal_event
+        return event.date if event else None
+
+    @property
     def status(self) -> str | None:
         """EU procedure status: adopted, withdrawn, or ongoing."""
         if self.adoption_event is not None:
             return "adopted"
-        for event in self.events:
-            if event.type in _WITHDRAWAL_EVENT_TYPES:
-                return "withdrawn"
+        if self.withdrawal_event is not None:
+            return "withdrawn"
         return "ongoing" if self.events else None
 
     def model_post_init(self, __context: Any) -> None:
@@ -172,9 +188,7 @@ class EUProcedure(Procedure):
 
         events = [EUEvent.from_openbasement(e) for e in data.get("events", [])]
 
-        identifiers = _identifiers_from_uris(
-            data.get("_uri"), data.get("_same_as")
-        )
+        identifiers = _identifiers_from_uris(data.get("_uri"), data.get("_same_as"))
         ref = data.get("reference")
         if ref:
             identifiers.add("procedure_ref", ref)

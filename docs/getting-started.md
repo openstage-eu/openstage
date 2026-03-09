@@ -14,16 +14,18 @@ pip install openstage @ git+https://github.com/openstage-eu/openstage.git
 The primary use case. Download a pre-compiled openstage dataset and load it into typed models:
 
 ```python
-import json
-from openstage.models.eu import EUProcedure
+from openstage.dataset import Dataset
 
-# Load procedures from a published dataset
-with open("openstage_procedures_v1.json") as f:
-    data = json.load(f)
+# Load a dataset from a directory or ZIP archive
+ds = Dataset.load("openstage-eu-2026.02.zip")
 
-procedures = [EUProcedure.model_validate(d) for d in data]
+# Dataset metadata
+ds.name                             # "openstage-eu"
+ds.version                          # "2026.02"
+len(ds)                             # Number of procedures
 
-proc = procedures[0]
+# Access individual procedures
+proc = ds[0]
 proc.title["en"]                    # "Regulation on ..."
 proc.title.preferred()              # Best available language (en > fr > de > _ > first)
 proc.identifiers.get("celex")       # "32016R0679"
@@ -31,7 +33,25 @@ proc.events                         # List of EUEvent objects
 proc.events[0].documents            # List of EUDocument objects
 ```
 
-*Dataset reader is under development. See [Models](base-models.md) for details on working with the data types.*
+The `Dataset` class auto-detects the file format and resolves the correct procedure class from dataset metadata. See [Datasets](dataset.md) for the full API.
+
+## Working with collections
+
+`Dataset` inherits from `ProcedureList`, so all collection methods are available directly:
+
+```python
+# Filter by status or type
+adopted = ds.by_status("adopted")
+olp = ds.by_type("OLP")
+
+# Procedures open at a specific date
+open_2024 = ds.open_at("2024-06-01")
+
+# Group by any attribute
+by_type = ds.group_by(lambda p: p.procedure_type)
+```
+
+See [Datasets](dataset.md) for the full collection and I/O API.
 
 ## Collecting raw data (power users)
 

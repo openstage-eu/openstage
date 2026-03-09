@@ -8,7 +8,6 @@ from openstage.models import extract_codebook, codebook_to_markdown
 from openstage.models.eu import EUProcedure, EUEvent, EUDocument
 from openstage.adapters.eu.procedures import procedure_from_openbasement
 
-
 # Reuse the realistic fixture from test_adapters_eu
 PROCEDURE_FIXTURE = {
     "_uri": "http://publications.europa.eu/resource/procedure/2019_2026",
@@ -53,7 +52,10 @@ PROCEDURE_FIXTURE = {
             "documents": [
                 {
                     "_uri": "http://publications.europa.eu/resource/cellar/doc-001",
-                    "title": {"en": "Proposal for a Regulation", "fr": "Proposition de reglement"},
+                    "title": {
+                        "en": "Proposal for a Regulation",
+                        "fr": "Proposition de reglement",
+                    },
                     "date": "2021-11-25",
                 },
             ],
@@ -188,45 +190,77 @@ class TestEUProcedureConstruction:
         assert proc.start_date == "2021-11-25"
 
     def test_start_event_com_adoption(self):
-        proc = EUProcedure(events=[
-            EUEvent(date="2024-03-01", type="DIS_byCONSIL"),
-            EUEvent(date="2024-01-01", type="ADP_byCOM"),
-        ])
+        proc = EUProcedure(
+            events=[
+                EUEvent(date="2024-03-01", type="DIS_byCONSIL"),
+                EUEvent(date="2024-01-01", type="ADP_byCOM"),
+            ]
+        )
         assert proc.start_event.type == "ADP_byCOM"
 
     def test_adoption_event(self):
-        proc = EUProcedure(events=[
-            EUEvent(date="2024-01-01", type="ADP_byCOM"),
-            EUEvent(date="2024-06-01", type="ADP_FRM_byCONSIL"),
-        ])
+        proc = EUProcedure(
+            events=[
+                EUEvent(date="2024-01-01", type="ADP_byCOM"),
+                EUEvent(date="2024-06-01", type="ADP_FRM_byCONSIL"),
+            ]
+        )
         assert proc.adoption_event.type == "ADP_FRM_byCONSIL"
         assert proc.adoption_date == "2024-06-01"
 
     def test_adoption_event_none_when_ongoing(self):
-        proc = EUProcedure(events=[
-            EUEvent(date="2024-01-01", type="ADP_byCOM"),
-        ])
+        proc = EUProcedure(
+            events=[
+                EUEvent(date="2024-01-01", type="ADP_byCOM"),
+            ]
+        )
         assert proc.adoption_event is None
         assert proc.adoption_date is None
 
     def test_status_adopted(self):
-        proc = EUProcedure(events=[
-            EUEvent(type="Adoption formelle par Conseil"),
-        ])
+        proc = EUProcedure(
+            events=[
+                EUEvent(type="Adoption formelle par Conseil"),
+            ]
+        )
         assert proc.status == "adopted"
 
+    def test_withdrawal_event(self):
+        proc = EUProcedure(
+            events=[
+                EUEvent(type="ADP_byCOM"),
+                EUEvent(date="2024-05-01", type="Retrait par Commission"),
+            ]
+        )
+        assert proc.withdrawal_event is not None
+        assert proc.withdrawal_event.type == "Retrait par Commission"
+        assert proc.withdrawal_date == "2024-05-01"
+
+    def test_withdrawal_event_none(self):
+        proc = EUProcedure(
+            events=[
+                EUEvent(type="ADP_byCOM"),
+            ]
+        )
+        assert proc.withdrawal_event is None
+        assert proc.withdrawal_date is None
+
     def test_status_withdrawn(self):
-        proc = EUProcedure(events=[
-            EUEvent(type="ADP_byCOM"),
-            EUEvent(type="Retrait par Commission"),
-        ])
+        proc = EUProcedure(
+            events=[
+                EUEvent(type="ADP_byCOM"),
+                EUEvent(type="Retrait par Commission"),
+            ]
+        )
         assert proc.status == "withdrawn"
 
     def test_status_ongoing(self):
-        proc = EUProcedure(events=[
-            EUEvent(type="ADP_byCOM"),
-            EUEvent(type="DIS_byCONSIL"),
-        ])
+        proc = EUProcedure(
+            events=[
+                EUEvent(type="ADP_byCOM"),
+                EUEvent(type="DIS_byCONSIL"),
+            ]
+        )
         assert proc.status == "ongoing"
 
     def test_status_empty(self):
@@ -414,17 +448,20 @@ class TestMultiLangTextDefaultLang:
 
     def test_default_lang_underscore(self):
         from openstage.models import MultiLangText
+
         t = MultiLangText.from_value("hello")
         assert t["_"] == "hello"
 
     def test_custom_default_lang(self):
         from openstage.models import MultiLangText
+
         t = MultiLangText.from_value("hello", default_lang="en")
         assert t["en"] == "hello"
         assert "_" not in t
 
     def test_dict_ignores_default_lang(self):
         from openstage.models import MultiLangText
+
         t = MultiLangText.from_value({"fr": "bonjour"}, default_lang="en")
         assert t["fr"] == "bonjour"
         assert "en" not in t
@@ -434,6 +471,7 @@ class TestMultiLangTextJsonSchema:
 
     def test_json_schema_output(self):
         from openstage.models import MultiLangText
+
         schema = MultiLangText.__get_pydantic_json_schema__(None, None)
         assert schema["type"] == "object"
         assert "additionalProperties" in schema
