@@ -1,6 +1,10 @@
 # openstage
 
-Python package for working with legislative data. Provides typed Pydantic models for procedures, events, and documents, and adapters for mapping external data into them. Current case implementations: EU.
+Python package for working with legislative data. Provides typed Pydantic models for procedures, events, and documents, and adapters for mapping external data into them.
+
+Current case implementations:
+
+- EU
 
 Part of the [openstage project](https://github.com/openstage-eu).
 
