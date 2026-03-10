@@ -72,7 +72,7 @@ PROCEDURE_FIXTURE = {
             "date": "2023-02-02",
             "type_code": "POSITION_EP",
             "title": {"en": "European Parliament position"},
-            "occurs_in_phase": "FIRST_READING",
+            "occurs_in_phase": "RDG1",
             "document_reference": ["PE/70/2023/INIT"],
         },
     ],
@@ -128,7 +128,7 @@ class TestEUEventConstruction:
     def test_from_openbasement_with_phase(self):
         data = PROCEDURE_FIXTURE["events"][1]
         event = EUEvent.from_openbasement(data)
-        assert event.occurs_in_phase == "FIRST_READING"
+        assert event.occurs_in_phase == "RDG1"
 
 
 class TestEUProcedureConstruction:
