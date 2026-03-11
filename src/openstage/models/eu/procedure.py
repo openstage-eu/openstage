@@ -26,15 +26,23 @@ _START_EVENT_TYPES = {
 }
 
 # Event type codes that indicate formal adoption of the legislative text.
+# Includes formal Council adoption, EP+Council signature, and approval of
+# the other institution's reading position (which concludes the procedure).
 _ADOPTION_EVENT_TYPES = {
     "ADP_FRM_byCONSIL",
     "Adoption formelle par Conseil",
     "SIGN_byEP_CONSIL",
     "Signature par le Parlement européen et le Conseil",
+    "APR_R1_byCONSIL",
+    "Approbation du Conseil en 1\u00e8re  lecture",
+    "APR_R2_POS_CONSIL_byEP",
+    "Approbation Conseil 2\u00e8me lecture",
+    "ADP_R3_byCONSIL",
 }
 
 # Event type codes that indicate the procedure was withdrawn.
 _WITHDRAWAL_EVENT_TYPES = {
+    "WDW_byCOM",
     "Retrait par Commission",
 }
 
@@ -148,6 +156,14 @@ class EUProcedure(Procedure):
             if event.type in _ADOPTION_EVENT_TYPES:
                 return event
         return None
+
+    @property
+    def end_event(self) -> Event | None:
+        """Terminal event: adoption or withdrawal, whichever applies."""
+        event = self.adoption_event
+        if event is not None:
+            return event
+        return self.withdrawal_event
 
     @property
     def withdrawal_event(self) -> Event | None:

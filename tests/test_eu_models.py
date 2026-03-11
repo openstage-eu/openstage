@@ -225,6 +225,37 @@ class TestEUProcedureConstruction:
         )
         assert proc.status == "adopted"
 
+    def test_adoption_event_council_approval_r1(self):
+        proc = EUProcedure(
+            events=[
+                EUEvent(date="2024-01-01", type="ADP_byCOM"),
+                EUEvent(date="2024-06-01", type="APR_R1_byCONSIL"),
+            ]
+        )
+        assert proc.adoption_event is not None
+        assert proc.adoption_date == "2024-06-01"
+        assert proc.status == "adopted"
+
+    def test_adoption_event_ep_approval_r2(self):
+        proc = EUProcedure(
+            events=[
+                EUEvent(date="2024-01-01", type="ADP_byCOM"),
+                EUEvent(date="2024-06-01", type="APR_R2_POS_CONSIL_byEP"),
+            ]
+        )
+        assert proc.adoption_event is not None
+        assert proc.status == "adopted"
+
+    def test_adoption_event_conciliation_r3(self):
+        proc = EUProcedure(
+            events=[
+                EUEvent(date="2024-01-01", type="ADP_byCOM"),
+                EUEvent(date="2024-09-01", type="ADP_R3_byCONSIL"),
+            ]
+        )
+        assert proc.adoption_event is not None
+        assert proc.status == "adopted"
+
     def test_withdrawal_event(self):
         proc = EUProcedure(
             events=[
@@ -235,6 +266,17 @@ class TestEUProcedureConstruction:
         assert proc.withdrawal_event is not None
         assert proc.withdrawal_event.type == "Retrait par Commission"
         assert proc.withdrawal_date == "2024-05-01"
+
+    def test_withdrawal_event_wdw_code(self):
+        proc = EUProcedure(
+            events=[
+                EUEvent(type="ADP_byCOM"),
+                EUEvent(date="2024-05-01", type="WDW_byCOM"),
+            ]
+        )
+        assert proc.withdrawal_event is not None
+        assert proc.withdrawal_date == "2024-05-01"
+        assert proc.status == "withdrawn"
 
     def test_withdrawal_event_none(self):
         proc = EUProcedure(
@@ -266,6 +308,71 @@ class TestEUProcedureConstruction:
     def test_status_empty(self):
         proc = EUProcedure()
         assert proc.status is None
+
+    def test_end_event_adopted(self):
+        proc = EUProcedure(
+            events=[
+                EUEvent(date="2024-01-01", type="ADP_byCOM"),
+                EUEvent(date="2024-06-01", type="ADP_FRM_byCONSIL"),
+            ]
+        )
+        assert proc.end_event.type == "ADP_FRM_byCONSIL"
+        assert proc.end_date == "2024-06-01"
+
+    def test_end_event_withdrawn(self):
+        proc = EUProcedure(
+            events=[
+                EUEvent(date="2024-01-01", type="ADP_byCOM"),
+                EUEvent(date="2024-05-01", type="Retrait par Commission"),
+            ]
+        )
+        assert proc.end_event.type == "Retrait par Commission"
+        assert proc.end_date == "2024-05-01"
+
+    def test_end_event_ongoing(self):
+        proc = EUProcedure(
+            events=[EUEvent(date="2024-01-01", type="ADP_byCOM")]
+        )
+        assert proc.end_event is None
+        assert proc.end_date is None
+
+    def test_end_event_adoption_takes_precedence(self):
+        proc = EUProcedure(
+            events=[
+                EUEvent(date="2024-01-01", type="ADP_byCOM"),
+                EUEvent(date="2024-04-01", type="Retrait par Commission"),
+                EUEvent(date="2024-06-01", type="ADP_FRM_byCONSIL"),
+            ]
+        )
+        assert proc.end_event.type == "ADP_FRM_byCONSIL"
+
+    def test_duration_adopted(self):
+        proc = EUProcedure(
+            events=[
+                EUEvent(date="2024-01-01", type="ADP_byCOM"),
+                EUEvent(date="2024-06-01", type="ADP_FRM_byCONSIL"),
+            ]
+        )
+        assert proc.duration() == 152  # Jan 1 to Jun 1
+
+    def test_duration_withdrawn(self):
+        proc = EUProcedure(
+            events=[
+                EUEvent(date="2024-01-01", type="ADP_byCOM"),
+                EUEvent(date="2024-03-01", type="Retrait par Commission"),
+            ]
+        )
+        assert proc.duration() == 60  # Jan 1 to Mar 1
+
+    def test_duration_ongoing_with_reference(self):
+        proc = EUProcedure(
+            events=[EUEvent(date="2024-01-01", type="ADP_byCOM")]
+        )
+        assert proc.duration(reference_date="2024-02-01") == 31
+
+    def test_duration_no_start(self):
+        proc = EUProcedure()
+        assert proc.duration() is None
 
     def test_from_openbasement_raw(self):
         proc = EUProcedure.from_openbasement(PROCEDURE_FIXTURE)

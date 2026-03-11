@@ -287,6 +287,28 @@ class TestProcedure:
         assert Procedure().status is None
         assert Procedure(events=[Event(date="2024-01-01")]).status == "ongoing"
 
+    def test_end_event_base_returns_adoption(self):
+        proc = Procedure(events=[Event(date="2024-01-01")])
+        assert proc.end_event is None
+        assert proc.end_date is None
+
+    def test_duration_concluded(self):
+        proc = Procedure(events=[
+            Event(date="2024-01-01", type="proposal"),
+            Event(date="2024-01-01", type="proposal"),
+        ])
+        # Base model has no adoption_event, so end_date is None.
+        # With a reference date, duration is computed against that.
+        assert proc.duration(reference_date="2024-01-11") == 10
+
+    def test_duration_no_start(self):
+        proc = Procedure()
+        assert proc.duration() is None
+
+    def test_duration_with_reference_date(self):
+        proc = Procedure(events=[Event(date="2024-01-01")])
+        assert proc.duration(reference_date="2024-02-01") == 31
+
     def test_init_subclass_warns_on_missing_overrides(self):
         import warnings
         with warnings.catch_warnings(record=True) as w:
@@ -297,6 +319,7 @@ class TestProcedure:
 
             msgs = [str(x.message) for x in w]
             assert any("adoption_event" in m for m in msgs)
+            assert any("end_event" in m for m in msgs)
             assert any("status" in m for m in msgs)
 
     def test_extra_fields(self):

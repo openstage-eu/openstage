@@ -113,11 +113,17 @@ proc._raw["_raw_triples"]   # Unconsumed RDF triples
 | `start_date` | Date of `start_event` | When the procedure started |
 | `adoption_event` | `None` | The event where the text was formally adopted |
 | `adoption_date` | Date of `adoption_event` | When the text was adopted |
+| `end_event` | Same as `adoption_event` | The terminal event that concluded the procedure |
+| `end_date` | Date of `end_event` | When the procedure concluded |
 | `status` | `"adopted"` if adoption event exists, `"ongoing"` if events exist, `None` if empty | Current status of the procedure |
+
+| Method | Signature | Purpose |
+|--------|-----------|---------|
+| `duration()` | `duration(reference_date: str \| None = None) -> int \| None` | Days between `start_date` and `end_date`. For ongoing procedures, uses `reference_date` (defaults to today). Returns `None` if no start date. |
 
 These are designed to be overridden by case models with domain-specific logic. The base defaults use chronological heuristics where possible and return `None` where domain knowledge is required.
 
-When you subclass `Procedure`, a warning is emitted at class definition time if you do not override `adoption_event` and `status`, since these almost always require domain-specific logic.
+When you subclass `Procedure`, a warning is emitted at class definition time if you do not override `adoption_event`, `end_event`, and `status`, since these almost always require domain-specific logic.
 
 ## Building custom case models
 
@@ -172,6 +178,17 @@ class MyProcedure(Procedure):
         return None
 
     @property
+    def end_event(self) -> Event | None:
+        """Terminal event: adoption or withdrawal."""
+        event = self.adoption_event
+        if event is not None:
+            return event
+        for event in self.events:
+            if event.type == "WITHDRAWAL":
+                return event
+        return None
+
+    @property
     def status(self) -> str | None:
         """Derive status from event types."""
         if self.adoption_event is not None:
@@ -182,7 +199,7 @@ class MyProcedure(Procedure):
         return "ongoing" if self.events else None
 ```
 
-Call `super().start_event` to fall back to the base chronological heuristic when no domain-specific start event is found. For `adoption_event` and `status`, the base defaults are rarely useful, so override them directly.
+Call `super().start_event` to fall back to the base chronological heuristic when no domain-specific start event is found. For `adoption_event`, `end_event`, and `status`, the base defaults are rarely useful, so override them directly.
 
 ### The from_openbasement pattern
 
@@ -221,4 +238,4 @@ proc.status                         # "adopted", "withdrawn", or "ongoing"
 proc.get_all_documents()            # All documents across all events
 ```
 
-EU-specific start, adoption, and status logic matches on known event type codes (e.g., `ADP_byCOM` for Commission proposals, `ADP_FRM_byCONSIL` for Council adoption). See [EU Models](eu-models.md) for the full API reference and field details.
+EU-specific start, adoption, withdrawal, and status logic matches on known event type codes (e.g., `ADP_byCOM` for Commission proposals, `ADP_FRM_byCONSIL` for Council adoption, `WDW_byCOM` for withdrawal). The `end_event` property returns the adoption event if present, otherwise the withdrawal event. See [EU Models](eu-models.md) for the full API reference and field details.

@@ -80,20 +80,13 @@ class ProcedureList:
 
         A procedure is open at a given date if:
         - It has a start_date and start_date <= date
-        - It has not yet been adopted (adoption_date is None or > date)
-        - It has not yet been withdrawn (withdrawal_date > date, or if no
-          withdrawal_date property exists, status != "withdrawn" at that point)
+        - It has no end_date, or end_date > date
         """
 
         def _is_open(p: Procedure) -> bool:
             if p.start_date is None or p.start_date > date:
                 return False
-            # Check adoption
-            if p.adoption_date is not None and p.adoption_date <= date:
-                return False
-            # Check withdrawal
-            withdrawal_date = getattr(p, "withdrawal_date", None)
-            if withdrawal_date is not None and withdrawal_date <= date:
+            if p.end_date is not None and p.end_date <= date:
                 return False
             return True
 

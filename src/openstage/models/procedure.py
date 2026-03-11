@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import warnings
+from datetime import date
 
 from pydantic import Field
 
@@ -12,7 +13,7 @@ from .event import Event
 
 # Properties that concrete subclasses should override with domain-specific
 # logic. A warning is emitted at class definition time if they are not.
-_INTERFACE_PROPERTIES = ("adoption_event", "status")
+_INTERFACE_PROPERTIES = ("adoption_event", "end_event", "status")
 
 
 class Procedure(Entity):
@@ -30,6 +31,7 @@ class Procedure(Entity):
 
     - ``start_event`` -- the event that initiated the procedure
     - ``adoption_event`` -- the event where the text was formally adopted
+    - ``end_event`` -- the terminal event (adoption, withdrawal, etc.)
     - ``status`` -- procedure status (ongoing, adopted, withdrawn, etc.)
 
     Base defaults use chronological heuristics where possible and return
@@ -90,6 +92,43 @@ class Procedure(Entity):
         """Date when the legislative text was adopted, or None."""
         event = self.adoption_event
         return event.date if event else None
+
+    @property
+    def end_event(self) -> Event | None:
+        """Terminal event that concluded this procedure.
+
+        Base default: the adoption event. Subclasses should override to
+        include other terminal events (e.g. withdrawal).
+        """
+        return self.adoption_event
+
+    @property
+    def end_date(self) -> str | None:
+        """Date when this procedure concluded, or None if still ongoing."""
+        event = self.end_event
+        return event.date if event else None
+
+    def duration(self, reference_date: str | None = None) -> int | None:
+        """Number of days between start and end of this procedure.
+
+        For concluded procedures, returns days between start_date and
+        end_date. For ongoing procedures, uses reference_date as the
+        end point. If reference_date is None, defaults to today.
+
+        Returns None if start_date is missing.
+
+        Note: in the future, reference_date could default to a
+        collection/download date once that field is implemented.
+        """
+        if self.start_date is None:
+            return None
+        end = self.end_date
+        if end is None:
+            if reference_date is None:
+                reference_date = date.today().isoformat()
+            end = reference_date
+        start = date.fromisoformat(self.start_date)
+        return (date.fromisoformat(end) - start).days
 
     @property
     def status(self) -> str | None:

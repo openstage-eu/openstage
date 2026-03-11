@@ -71,8 +71,7 @@ by_type = pl.group_by(lambda p: p.procedure_type)
 A procedure is considered open at a given date if all of the following hold:
 
 - It has a `start_date` and that date is on or before the query date.
-- It has not yet been adopted (`adoption_date` is `None` or after the query date).
-- It has not yet been withdrawn (`withdrawal_date` is `None` or after the query date, when available on the procedure class).
+- It has no `end_date`, or `end_date` is after the query date.
 
 ### Serialization
 
